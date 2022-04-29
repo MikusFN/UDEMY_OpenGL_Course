@@ -1,0 +1,17 @@
+# IDE Folders
+/.vs
+/.vscode
+/.idea
+/cmake-build*
+/workspace
+/venv/
+/.venv/
+
+# Build Folders
+/Build
+/build
+/out
+
+# Build IDE env vars
+/CMakeSettings.json
+
