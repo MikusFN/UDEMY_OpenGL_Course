@@ -6,5 +6,6 @@ add_executable(${PROJECT_NAME} source/main.cpp)
 
 find_package(GLEW REQUIRED)
 
-target_link_libraries(${PROJECT_NAME} GL GLEW::GLEW glfw)
+include_directories("source/External_Libs/GLM")
 
+target_link_libraries(${PROJECT_NAME} GL GLEW::GLEW glfw)
