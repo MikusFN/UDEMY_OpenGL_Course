@@ -13,42 +13,61 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = PI / 180.0f;
 
-GLuint VAO, VBO, shader, uniformModel;
+GLuint VAO, VBO, IBO, shader, uniformModel;
 
 //Vertex Shader
 static const char* vertex = "                                                \n\
 #version 330                                                                  \n\
-uniform mat4 model;                                                            \n\
+                                                                              \n\
 layout (location = 0) in vec3 pos;											  \n\
+                                											  \n\
+uniform mat4 model;                                                            \n\
+out vec4 vertColor;                                                            \n\
                                                                               \n\
 void main()                                                                   \n\
 {                                                                             \n\
-    gl_Position = model * vec4(pos, 1.0);		                                \n\
+    gl_Position = model * vec4(pos, 1.0f);		                                \n\
+    vertColor = vec4(clamp(pos, 0.0f, 1.0f),1.0f);		                                \n\
 }";
 
 //Fragment Shader
 static const char* frag = "                                                    \n\
 #version 330                                                                  \n\
                                                                               \n\
+in vec4 vertColor;                                                            \n\
 out vec4 color;                                                               \n\
                                                                               \n\
 void main()                                                                   \n\
 {                                                                             \n\
-    color = vec4(1.0, 0.0, 0.0, 1.0);                                         \n\
+    color = vertColor;                                         \n\
 }";
 
 void CreateTriangle() {
+
+    unsigned int indices[] = {
+        0, 3, 1,
+        1, 3, 2, 
+        2, 3, 0, 
+        0, 1, 2
+    };
+
     GLfloat vertices[] = {
         -1.0f, -1.0f, 0.0f, 
-        1.0f, -1.0f, 0.0f, 
-        0.0f, 1.0f, 0.0f, 
+         0.0f, -1.0f, 1.0f, 
+         1.0f, -1.0f, 0.0f, 
+         0.0f,  1.0f, 0.0f, 
     };
 
     //Create a VAO in the graphics memory
     glGenVertexArrays(1, &VAO);
     glBindVertexArray(VAO);
 
-    //Create a VBO in the graphics card, with the target to the gl array buffer type
+    //Creat a IBO and, biind to current context and then fill it with the data
+    glGenBuffers(1, &IBO);
+    glBindBuffer(GL_ARRAY_BUFFER, IBO);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(indices), indices, GL_STATIC_DRAW);
+
+    //Create a VBO, with the target to the gl array buffer type
     glGenBuffers(1, &VBO);
     glBindBuffer(GL_ARRAY_BUFFER, VBO);
 
@@ -64,6 +83,7 @@ void CreateTriangle() {
     glBindBuffer(GL_ARRAY_BUFFER, 0);
     glBindVertexArray(0);
 
+    //WARNING -> The IBO needs to be unbinded
 }
 
 void AddShader(GLint shaderProg, const char* shaderCode, GLenum shaderType) {
@@ -175,6 +195,9 @@ int main() {
         return 1;
     }
 
+    //Enable Depth test
+    glEnable(GL_DEPTH_TEST);
+
     //Setup viewport size
     glViewport(0 , 0, bufferWidth, bufferHeight);
 
@@ -182,33 +205,43 @@ int main() {
     CreateTriangle();
     CompileShaders();
 
+    float currentRotAngle = 45.0f;
+
     //Main loop
     while (!glfwWindowShouldClose(mainWindow)) {
         // Handle I/O
         glfwPollEvents();
 
         //Clear frame
-        glClearColor(0.0f, 1.0f, 0.0f, 1.0f);
-        //Which buffer to clear
-        glClear(GL_COLOR_BUFFER_BIT);
+        glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
+        //Which buffer to clear (combined with the depth buffer by the OR operator) Sets the bit to 1 
+        glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //Shader to use
         glUseProgram(shader);
 
         glm::mat4 model(1.0f);
+        
+        currentRotAngle = currentRotAngle > 360 ? 0.0f : currentRotAngle + 0.1f;
 
         //model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f));
         //Rotate funtion of glm is in radians
-        //model = glm::rotate(model, 45 * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
-        //model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.0f));
+        model = glm::rotate(model, currentRotAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
+        //Scale is done first, so in code is run last
+        model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
         
         //Update uniform in the shaders
         glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
         //Bind VAO to give currect context 
         glBindVertexArray(VAO);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        //Bind the IBO to the VAO
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
 
+        glDrawElements(GL_TRIANGLES, 12, GL_UNSIGNED_INT, 0);
+
+        //UnBind IBO
+        glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, IBO);
         //UnBind VAO
         glBindVertexArray(0);
         //Shader to unbind
