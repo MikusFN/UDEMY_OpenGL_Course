@@ -13,7 +13,7 @@
 const GLint WIDTH = 800, HEIGHT = 600;
 const float toRadians = PI / 180.0f;
 
-GLuint VAO, VBO, IBO, shader, uniformModel;
+GLuint VAO, VBO, IBO, shader, u_Mat_Model, u_Mat_Proj;
 
 //Vertex Shader
 static const char* vertex = "                                                \n\
@@ -22,11 +22,13 @@ static const char* vertex = "                                                \n\
 layout (location = 0) in vec3 pos;											  \n\
                                 											  \n\
 uniform mat4 model;                                                            \n\
+uniform mat4 projection;                                                        \n\
+                                											  \n\
 out vec4 vertColor;                                                            \n\
                                                                               \n\
 void main()                                                                   \n\
 {                                                                             \n\
-    gl_Position = model * vec4(pos, 1.0f);		                                \n\
+    gl_Position = projection * model * vec4(pos, 1.0f);		                                \n\
     vertColor = vec4(clamp(pos, 0.0f, 1.0f),1.0f);		                                \n\
 }";
 
@@ -149,7 +151,8 @@ void CompileShaders() {
         return;
     }
 
-    uniformModel = glGetUniformLocation(shader, "model");
+    u_Mat_Model = glGetUniformLocation(shader, "model");
+    u_Mat_Proj = glGetUniformLocation(shader, "projection");
 }
 
 int main() {
@@ -205,6 +208,8 @@ int main() {
     CreateTriangle();
     CompileShaders();
 
+    glm::mat4 projection = glm::perspective(90.0f, (GLfloat)(bufferWidth)/(GLfloat)(bufferHeight), 0.1f, 100.0f);
+
     float currentRotAngle = 45.0f;
 
     //Main loop
@@ -224,14 +229,15 @@ int main() {
         
         currentRotAngle = currentRotAngle > 360 ? 0.0f : currentRotAngle + 0.1f;
 
-        //model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f));
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, -1.0f));
         //Rotate funtion of glm is in radians
         model = glm::rotate(model, currentRotAngle * toRadians, glm::vec3(0.0f, 1.0f, 0.0f));
         //Scale is done first, so in code is run last
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
         
         //Update uniform in the shaders
-        glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(u_Mat_Model, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(u_Mat_Proj, 1, GL_FALSE, glm::value_ptr(projection));
 
         //Bind VAO to give currect context 
         glBindVertexArray(VAO);
