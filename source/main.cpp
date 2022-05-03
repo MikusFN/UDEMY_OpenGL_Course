@@ -4,19 +4,26 @@
 #include <GL/glew.h>
 #include <GLFW/glfw3.h>
 
-const GLint WIDTH = 800, HEIGHT = 600;
+#include <glm/glm.hpp>
+#include <glm/gtc/type_ptr.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 
-GLuint VAO, VBO, shader;
+#define PI 3.14159265f
+
+const GLint WIDTH = 800, HEIGHT = 600;
+const float toRadians = PI / 180.0f;
+
+GLuint VAO, VBO, shader, uniformModel;
 
 //Vertex Shader
 static const char* vertex = "                                                \n\
 #version 330                                                                  \n\
-                                                                              \n\
+uniform mat4 model;                                                            \n\
 layout (location = 0) in vec3 pos;											  \n\
                                                                               \n\
 void main()                                                                   \n\
-{                                                                               \n\
-    gl_Position = vec4(0.4 * pos.x, 0.4 * pos.y, pos.z, 1.0);				  \n\
+{                                                                             \n\
+    gl_Position = model * vec4(pos, 1.0);		                                \n\
 }";
 
 //Fragment Shader
@@ -121,6 +128,8 @@ void CompileShaders() {
         std::cout << " ERROR Validating shader program -> " << errorLog << "\n";
         return;
     }
+
+    uniformModel = glGetUniformLocation(shader, "model");
 }
 
 int main() {
@@ -185,6 +194,16 @@ int main() {
 
         //Shader to use
         glUseProgram(shader);
+
+        glm::mat4 model(1.0f);
+
+        //model = glm::translate(model, glm::vec3(1.0f, 0.0f, 0.0f));
+        //Rotate funtion of glm is in radians
+        //model = glm::rotate(model, 45 * toRadians, glm::vec3(0.0f, 0.0f, 1.0f));
+        //model = glm::scale(model, glm::vec3(0.4f, 0.4f, 0.0f));
+        
+        //Update uniform in the shaders
+        glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
 
         //Bind VAO to give currect context 
         glBindVertexArray(VAO);
