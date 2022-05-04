@@ -5,7 +5,7 @@ project(UDEMY_OpenGL_Course)
 include_directories(${PROJECT_NAME} source/External_Libs/GLM/)
 include_directories(${PROJECT_NAME} source/Public/)
 
-add_executable(${PROJECT_NAME} source/main.cpp source/Private/Mesh.cpp source/Private/Shader.cpp)
+add_executable(${PROJECT_NAME} source/main.cpp source/Private/Mesh.cpp source/Private/Shader.cpp source/Private/Window.cpp)
 
 find_package(GLEW REQUIRED)
 

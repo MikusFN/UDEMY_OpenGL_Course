@@ -14,6 +14,36 @@ void Shader::CreateFromString(const char* vertexCode, const char* fragmentCode) 
     	CompileShader(vertexCode, fragmentCode);
 }
 
+void Shader::CreateFromFile(const char* vertexLocation, const char* fragmentLocation) {
+    std::string vert = ""; 
+    std::string frag = "";
+
+    vert = ReadFile(vertexLocation);
+    frag = ReadFile(fragmentLocation);
+    
+    CompileShader(vert.c_str(), frag.c_str());
+}
+
+std::string Shader::ReadFile(const char* fileName) {
+    std::string content;
+    std::string addPathString;
+    addPathString.append("../source/Shaders/" + std::string(fileName));
+	std::ifstream filestream(addPathString, std::ios::in);
+
+    if(!filestream.is_open()) {
+        std::cout << "ERROR - Failed to open file in location - " << addPathString << "\n";
+    }
+    else {
+        std::string line = "";
+        while (!filestream.eof()) {
+            std::getline(filestream, line);
+            content.append(line);
+        }
+    }
+    filestream.close();   
+    return content;
+}
+
 void Shader::AddShader(GLuint, const char* shaderCode, GLenum shaderType) {
     GLuint shader = glCreateShader(shaderType);
 
@@ -35,7 +65,7 @@ void Shader::AddShader(GLuint, const char* shaderCode, GLenum shaderType) {
     glGetShaderiv(shader, GL_COMPILE_STATUS, &result);
     if(!result) {
         glGetShaderInfoLog(shader, sizeof(errorLog), NULL, errorLog);
-        std::cout << " ERROR Compiling " << shaderType << " shader program -> "<< errorLog << "\n";
+        std::cout << "ERROR Compiling " << (shaderType == GL_VERTEX_SHADER ? "vertex" : "fragment") << " shader program -> "<< errorLog << "\n";
         return;
     }
 
@@ -64,7 +94,7 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
     glGetProgramiv(m_ShaderID, GL_LINK_STATUS, &result);
     if(!result) {
         glGetProgramInfoLog(m_ShaderID, sizeof(errorLog), NULL, errorLog);
-        std::cout << " ERROR Linking shader program -> " << errorLog << "\n";
+        std::cout << "ERROR Linking shader program -> " << errorLog << "\n";
         return;
     }
 
@@ -73,7 +103,7 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
     glGetProgramiv(m_ShaderID, GL_VALIDATE_STATUS, &result);
     if(!result) {
         glGetProgramInfoLog(m_ShaderID, sizeof(errorLog), NULL, errorLog);
-        std::cout << " ERROR Validating shader program -> " << errorLog << "\n";
+        std::cout << "ERROR Validating shader program -> " << errorLog << "\n";
         return;
     }
 
