@@ -12,6 +12,7 @@
 #include <Mesh.h>
 #include <Shader.h>
 #include <Window.h>
+#include <Camera.h>
 
 #define PI 3.14159265f
 
@@ -22,6 +23,9 @@ Window mainWindow(WIDTH, HEIGHT);
 
 std::vector<Mesh*> meshList;
 std::vector<Shader*> shaderList;
+
+GLfloat deltaTime = 0.0f;
+GLfloat previousTime = 0.0f;
 
 //Shader paths
 static const char* pathVertex = "shader.vert";
@@ -69,22 +73,37 @@ int main() {
     CreateObjects();
     CreateShaders();
 
+    Camera mainCamera;
+
+    GLuint uniformProjection = 0, uniformModel = 0, uniformView = 0;
     glm::mat4 projection = glm::perspective(90.0f, (GLfloat)(mainWindow.GetWindowWidth())/(GLfloat)(mainWindow.GetWindowHeight()), 0.1f, 100.0f);
 
     float currentRotAngle = 45.0f;
 
     //Main loop
     while (HasWindow && !mainWindow.GetWindowShouldClose()) {
+
+        GLfloat currentTime = glfwGetTime();
+        deltaTime = currentTime - previousTime;
+        previousTime = currentTime;
+
         // Handle I/O
         glfwPollEvents();
 
-        //Clear frame
+        //Set camera to get key events
+        mainCamera.keyControl(mainWindow.getsKeys(), deltaTime);
+        mainCamera.mouseControl(-mainWindow.getYChange(), mainWindow.getXChange(), deltaTime);
+
+        //Clear frame1
         glClearColor(0.0f, 0.0f, 0.0f, 1.0f);
         //Which buffer to clear (combined with the depth buffer by the OR operator) Sets the bit to 1 
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
 
         //Shader to use
         shaderList[0]->UseShader();
+        uniformModel = shaderList[0]->GetModelLocation();
+        uniformView = shaderList[0]->GetViewLocation();
+        uniformProjection = shaderList[0]->GetProjectionLocation();
         
         glm::mat4 model(1.0f);
         
@@ -97,8 +116,9 @@ int main() {
         model = glm::scale(model, glm::vec3(0.4f, 0.4f, 1.0f));
         
         //Update uniform in the shaders
-        glUniformMatrix4fv(shaderList[0]->GetProjectionLocation(), 1, GL_FALSE, glm::value_ptr(projection));
-        glUniformMatrix4fv(shaderList[0]->GetModelLocation(), 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(uniformModel, 1, GL_FALSE, glm::value_ptr(model));
+        glUniformMatrix4fv(uniformView, 1, GL_FALSE, glm::value_ptr(mainCamera.calculateViewMatrix()));
+        glUniformMatrix4fv(uniformProjection, 1, GL_FALSE, glm::value_ptr(projection));
 
         //Render Mesh
         meshList[0]->RenderMesh();

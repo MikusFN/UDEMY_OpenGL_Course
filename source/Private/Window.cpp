@@ -11,6 +11,8 @@ Window::Window(GLint windowWidth = 800 , GLint windowHeight = 600) {
         keys[i] = false;
     }
 
+    lastX = 0.0f;
+    lastY = 0.0f;
     deltaX = 0.0f;
     deltaY = 0.0f;
 }

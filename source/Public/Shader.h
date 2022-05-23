@@ -8,7 +8,7 @@
 class Shader
 {
 private:
-    GLuint m_ShaderID, u_Mat_Model, u_Mat_Proj;
+    GLuint m_ShaderID, u_Mat_Model, u_Mat_Proj, u_Mat_View;
 
 public:
     Shader(/* args */);
@@ -20,6 +20,7 @@ public:
 
     GLuint GetProjectionLocation();
     GLuint GetModelLocation();
+    GLuint GetViewLocation();
     
     void CompileShader(const char* vertexCode, const char* fragmentCode);
     void AddShader(GLuint, const char* shaderCode, GLenum shaderType);

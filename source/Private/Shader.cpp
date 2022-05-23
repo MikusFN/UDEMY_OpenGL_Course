@@ -109,15 +109,22 @@ void Shader::CompileShader(const char* vertexCode, const char* fragmentCode) {
 
     u_Mat_Model = glGetUniformLocation(m_ShaderID, "model");
     u_Mat_Proj = glGetUniformLocation(m_ShaderID, "projection");
+    u_Mat_View = glGetUniformLocation(m_ShaderID, "view");
 
 }
 
 GLuint Shader::GetProjectionLocation() {
     return u_Mat_Proj;
 }
+
+GLuint Shader::GetViewLocation() {
+    return u_Mat_View;
+}
+
 GLuint Shader::GetModelLocation() {
     return u_Mat_Model;
 }
+
 void Shader::UseShader() {
     glUseProgram(m_ShaderID);
 
